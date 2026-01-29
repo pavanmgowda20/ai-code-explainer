@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>AI Code Explainer</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0;
+    }
+
+    .container {
+      background: white;
+      padding: 25px 30px;
+      border-radius: 12px;
+      width: 450px;
+      max-width: 90%;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 15px;
+      color: #333;
+    }
+
+    textarea {
+      width: 100%;
+      height: 150px;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+      resize: none;
+      outline: none;
+    }
+
+    textarea:focus {
+      border-color: #667eea;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 15px;
+      padding: 10px;
+      background: #667eea;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #5a67d8;
+    }
+
+    pre {
+      background: #f3f4f6;
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 8px;
+      max-height: 200px;
+      overflow-y: auto;
+      font-size: 13px;
+      color: #333;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h2>AI Code Explainer</h2>
+
+    <textarea id="code" placeholder="Paste your code here..."></textarea>
+
+    <button onclick="explainCode()">Explain Code</button>
+
+    <pre id="output"></pre>
+  </div>
+
+  <script>
+    async function explainCode() {
+      const code = document.getElementById("code").value;
+      const output = document.getElementById("output");
+
+      if (!code.trim()) {
+        output.textContent = "Please paste some code first.";
+        return;
+      }
+
+      output.textContent = "Explaining...";
+
+      try {
+        const response = await fetch("/api/explain", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ code: code }),
+        });
+
+        const data = await response.json();
+        output.textContent = data.explanation;
+      } catch (error) {
+        output.textContent = "Error: Could not get explanation.";
+        console.error(error);
+      }
+    }
+  </script>
+</body>
+</html>
