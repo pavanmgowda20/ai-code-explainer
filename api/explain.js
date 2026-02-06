@@ -1,5 +1,5 @@
 export default async function handler(req, res) {
-  console.log("Function execution started");
+  console.log("Function execution started (Fetch Version)");
   
   if (req.method !== "POST") {
     console.log("Method not allowed:", req.method);
@@ -18,29 +18,37 @@ export default async function handler(req, res) {
       });
     }
 
-    console.log("Request body:", JSON.stringify(req.body));
     const { code } = req.body || {};
-
     if (!code) {
       console.log("No code provided in body");
       return res.status(400).json({ error: "No code provided" });
     }
 
-    console.log("Importing Groq SDK dynamically...");
-    const { default: Groq } = await import("groq-sdk");
-    console.log("Groq SDK imported successfully");
-
-    const groq = new Groq({ apiKey });
-    
     const prompt = `Explain this code in simple terms for a beginner:\n${code}`;
-    console.log("Sending request to Groq API...");
+    console.log("Sending request to Groq API via fetch...");
 
-    const completion = await groq.chat.completions.create({
-      model: "llama-3.1-8b-instant",
-      messages: [{ role: "user", content: prompt }],
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "llama-3.1-8b-instant",
+        messages: [{ role: "user", content: prompt }]
+      })
     });
 
-    console.log("Groq API response received");
+    console.log("Groq API response status:", response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Groq API Error Response:", errorText);
+      throw new Error(`Groq API failed with status ${response.status}: ${errorText}`);
+    }
+
+    const completion = await response.json();
+    console.log("Groq API JSON parsed successfully");
     
     if (!completion.choices?.[0]?.message?.content) {
       console.error("Unexpected Groq response structure:", JSON.stringify(completion));
@@ -54,7 +62,6 @@ export default async function handler(req, res) {
     console.error("Critical Handler Error:", error);
     console.error("Stack:", error.stack);
     
-    // Ensure we send JSON even for critical failures
     res.status(500).json({ 
       error: "Internal Server Error",
       message: error.message,
